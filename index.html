@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROAST — your landing page, graded honestly</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0b;--panel:#131316;--line:#26262b;--txt:#e8e8ea;--dim:#8a8a93;--hot:#e5484d;--warm:#f5a623;--ok:#3dd68c}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;min-height:100vh;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:48px 20px 80px}
+header{text-align:center;margin-bottom:40px}
+.logo{font-size:56px;font-weight:800;letter-spacing:-2px}
+.logo span{color:var(--hot)}
+.tag{color:var(--dim);font-size:15px;margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px}
+label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--dim);margin-bottom:8px;font-weight:600}
+textarea{width:100%;background:#0d0d10;border:1px solid var(--line);border-radius:10px;color:var(--txt);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;padding:14px;resize:vertical;min-height:130px;outline:none}
+textarea:focus{border-color:#3d3d44}
+.row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+button{cursor:pointer;border:none;border-radius:10px;font-size:15px;font-weight:600;padding:13px 26px;transition:filter .15s}
+button:hover{filter:brightness(1.15)}
+.primary{background:var(--hot);color:#fff;flex:1;min-width:180px}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+.results{display:none}
+.gradebox{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.grade{font-size:72px;font-weight:800;letter-spacing:-3px;line-height:1}
+.gradesub{color:var(--dim);font-size:14px;max-width:420px}
+.dim{margin-bottom:14px}
+.dimhead{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}
+.dimhead b{font-weight:600}
+.dimhead .val{color:var(--dim);font-variant-numeric:tabular-nums}
+.bar{height:7px;background:#0d0d10;border-radius:4px;overflow:hidden}
+.bar>div{height:100%;border-radius:4px;transition:width .6s ease}
+.flag{padding:12px 14px;border-left:3px solid var(--hot);background:#16161a;border-radius:0 8px 8px 0;margin-bottom:10px;font-size:14px}
+.flag b{color:#fff}
+.flag.warn{border-color:var(--warm)}
+.flag.good{border-color:var(--ok)}
+.rewrites{display:grid;gap:10px}
+.rw{background:#0d0d10;border:1px solid var(--line);border-radius:10px;padding:13px 15px;font-size:14.5px}
+.rw small{display:block;color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin:26px 0 12px;font-weight:700}
+.share{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.share a,.share button{text-decoration:none;font-size:13px;padding:10px 18px;border-radius:8px}
+.xbtn{background:#fff;color:#000}
+.copybtn{background:transparent;border:1px solid var(--line);color:var(--dim)}
+footer{text-align:center;color:#55555e;font-size:12px;margin-top:44px}
+.copied{color:var(--ok)!important}
+@media(max-width:560px){.grade{font-size:56px}.wrap{padding-top:32px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="logo">RO<span>AST</span></div>
+<div class="tag">Paste your landing page copy. Get graded honestly in 30 seconds.</div>
+</header>
+
+<div class="card">
+<label for="copy">Your hero copy — headline, subheadline, CTA, anything you've got</label>
+<textarea id="copy" placeholder="Example:&#10;&#10;Revolutionary AI-powered platform that empowers teams to seamlessly leverage next-generation workflows.&#10;Learn more"></textarea>
+<div class="row">
+<button class="primary" onclick="roast()">Roast it 🔥</button>
+<button class="ghost" onclick="loadExample()">Try an example</button>
+<button class="ghost" onclick="document.getElementById('copy').value=''">Clear</button>
+</div>
+</div>
+
+<div class="results" id="results">
+<div class="card gradebox">
+<div class="grade" id="grade">—</div>
+<div class="gradesub" id="gradesub"></div>
+</div>
+<div class="card" id="dims"></div>
+<h2>The roast</h2>
+<div id="flags"></div>
+<h2>3 headlines that might survive</h2>
+<div class="rewrites" id="rewrites"></div>
+<div class="share">
+<a class="xbtn" id="xshare" href="#" target="_blank" rel="noopener">Share on X</a>
+<button class="copybtn" id="copybtn" onclick="copyRoast()">Copy my roast</button>
+</div>
+</div>
+
+<footer>Rule-based, no data leaves your browser. Built by an AI that got tired of reading "revolutionary platforms."</footer>
+</div>
+
+<script>
+const VAGUE=["revolutionary","innovative","cutting-edge","seamless","seamlessly","empower","empowers","leverage","leverages","synergy","next-generation","world-class","best-in-class","solution","solutions","platform","ecosystem","paradigm","disrupt","game-changing","state-of-the-art","holistic","robust","scalable","turnkey","end-to-end"];
+const WEAKCTA=["learn more","click here","submit","read more","find out more","discover","explore","see more","get in touch","contact us"];
+const PROOF=["trusted by","join","users","customers","teams","companies","rated","stars","reviews","testimonial","loved by","backed by","featured in","as seen"];
+const URGENCY=["today","now","limited","free","instant","instantly","fast","minutes","hours","guarantee","deadline","before","last chance"];
+const PAIN=["tired","struggle","struggling","wasting","waste","frustrat","hate","problem","pain","broken","slow","expensive","manual","mess","stuck","fail"];
+const OUTCOME=["save","saves","grow","grows","build","builds","double","triple","10x","2x","3x","increase","reduce","cut","ship","launch","automate","earn","make","get more","close","convert"];
+
+function norm(s){return s.toLowerCase()}
+function has(list,s){const n=norm(s);return list.filter(w=>n.includes(w))}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+
+function loadExample(){
+document.getElementById('copy').value="Introducing NexaFlow — the revolutionary AI-powered platform that empowers modern teams to seamlessly leverage next-generation collaboration workflows.\n\nTrusted by industry leaders worldwide.\n\nLearn more →";
+}
+
+function analyze(t){
+const lines=t.split("\n").map(l=>l.trim()).filter(Boolean);
+const headline=lines[0]||"";
+const hw=headline.split(/\s+/).filter(Boolean);
+const sentences=t.split(/[.!?]+/).filter(s=>s.trim());
+const words=t.split(/\s+/).filter(Boolean);
+const n=words.length||1;
+const avgWord=words.join(" ").length/n;
+const vague=has(VAGUE,t);
+const weakCTA=has(WEAKCTA,t);
+const proof=has(PROOF,t);
+const urgency=has(URGENCY,t);
+const pain=has(PAIN,t);
+const outcome=has(OUTCOME,t);
+const hasNum=/\d/.test(headline);
+const hasYou=/\byou\b|\byour\b/i.test(t);
+const capsRatio=(t.match(/[A-Z]/g)||[]).length/Math.max(1,t.replace(/[^A-Za-z]/g,"").length);
+const excl=(t.match(/!/g)||[]).length;
+
+// dimension scores 0-100
+const clarity=Math.max(5,Math.min(100,
+  70
+  -(hw.length>14?25:hw.length>10?12:0)
+  -(vague.length*14)
+  +(hasNum?8:0)
+  +(hasYou?10:0)
+  +(avgWord<5.5?8:0)));
+
+const specificity=Math.max(5,Math.min(100,
+  20+(hasNum?35:0)+(proof.length>=2?25:proof.length?12:0)
+  +(/\d+%|\d+x|\$\d|\d+ (users|customers|teams|companies|minutes|hours|days)/i.test(t)?25:0)
+  -vague.length*10));
+
+const proofScore=Math.max(5,Math.min(100,
+  15+(proof.length?18*Math.min(proof.length,3):0)
+  +(/rated|stars|reviews|testimonial/i.test(t)?18:0)
+  +(/\d[\d,.]*\s*(users|customers|teams|companies)/i.test(t)?25:0)
+  +(/trusted by/i.test(t)?10:0)));
+
+const hook=Math.max(5,Math.min(100,
+  45+(hasNum?15:0)+(/\?/.test(headline)?12:0)+(hasYou?12:0)
+  +(pain.length?10:0)+(outcome.length?10:0)+(urgency.length?5:0)
+  -vague.length*12));
+
+const cta=Math.max(5,Math.min(100,
+  30+(weakCTA.length?-25:0)
+  +(outcome.length&&!weakCTA.length?25:0)
+  +(/\b(start|get|try|build|ship|save|book|join|claim|create)\b/i.test(t)&&!weakCTA.length?20:0)));
+
+const hygiene=Math.max(5,Math.min(100,
+  90-vague.length*12-(capsRatio>0.25?20:0)-excl*12-(avgWord>6?15:0)-(hw.length>16?10:0)));
+
+const overall=Math.round(clarity*.25+specificity*.2+proofScore*.15+hook*.2+cta*.12+hygiene*.08);
+
+return{headline,hw,vague,weakCTA,proof,urgency,pain,outcome,hasNum,hasYou,
+  clarity,specificity,proofScore,hook,cta,hygiene,overall,avgWord,excl,capsRatio,sentences};
+}
+
+function gradeLetter(s){
+if(s>=90)return["A+","#3dd68c","Nobody will roast this. Suspicious."];
+if(s>=80)return["A","#3dd68c","Genuinely good. Ship it."];
+if(s>=70)return["B","#a3e635","Solid bones, weak surface."];
+if(s>=55)return["C","#f5a623","Convertible, but you're losing people."];
+if(s>=40)return["D","#f97316","A stranger can't tell what this is."];
+return["F","#e5484d","This reads like every other landing page ever written."];
+}
+
+function roast(){
+const t=document.getElementById('copy').value.trim();
+if(t.length<10){alert("Paste some real copy first — at least a headline.");return;}
+const a=analyze(t);
+const [letter,color,sub]=gradeLetter(a.overall);
+const flags=[];
+
+if(a.vague.length>=3)flags.push(["🔥","warn","<b>"+a.vague.length+" buzzwords detected:</b> "+a.vague.slice(0,6).join(", ")+(a.vague.length>6?"…":"")+". Every one of them is a word your reader has already trained themselves to skip."]);
+else if(a.vague.length)flags.push(["⚠️","warn","<b>Buzzword alert:</b> \""+a.vague[0]+"\" — fine once, poison in volume."]);
+if(a.hw.length>14)flags.push(["🔥","warn","<b>Your headline is "+a.hw.length+" words long.</b> People decide in 3 seconds. They read ~7 words. Cut to under 10."]);
+else if(a.hw.length<=9)flags.push(["✅","good","<b>Headline length: "+a.hw.length+" words.</b> Digestible. Good instinct."]);
+if(!a.hasNum)flags.push(["⚠️","warn","<b>No numbers anywhere.</b> \"3x faster\" beats \"blazingly fast\" every time. Specifics are credibility."]);
+else flags.push(["✅","good","<b>Numbers present.</b> Concrete claims survive skepticism."]);
+if(!a.hasYou)flags.push(["⚠️","warn","<b>Your copy never says \"you\".</b> Visitors don't care about your product; they care about their problem. Speak to them directly."]);
+if(a.proof.length===0)flags.push(["🔥","warn","<b>Zero proof signals.</b> No \"trusted by\", no user counts, no logos, no stars. Strangers assume the worst."]);
+else if(a.proof.length>=2)flags.push(["✅","good","<b>Proof signals found:</b> "+a.proof.slice(0,3).join(", ")+". Keep them above the fold."]);
+if(a.weakCTA.length)flags.push(["🔥","warn","<b>Dead CTA:</b> \""+a.weakCTA[0]+"\" tells the visitor nothing about what happens next. Name the outcome: \"Get my free audit\", not \"Learn more\"."]);
+else if(a.outcome.length)flags.push(["✅","good","<b>CTA has an outcome attached.</b> That's the difference between a click and a commitment."]);
+if(a.excl>=2)flags.push(["⚠️","warn","<b>"+a.excl+" exclamation marks.</b> Enthusiasm is not evidence. One, maximum."]);
+if(a.avgWord>6.2)flags.push(["⚠️","warn","<b>Average word length: "+a.avgWord.toFixed(1)+" chars.</b> That's academic register. Hemingway wrote at ~4.8. So should you."]);
+if(a.pain.length&&a.outcome.length)flags.push(["✅","good","<b>Pain → outcome arc detected.</b> You name the problem and the payoff. That's the whole game."]);
+if(a.urgency.length===0&&a.overall<80)flags.push(["⚠️","warn","<b>No urgency.</b> \"Start today\" costs you nothing and buys you the procrastinators."]);
+if(flags.filter(f=>f[1]==="good").length===0)flags.push(["🔥","warn","<b>Nothing here is salvageable on merit alone</b> — but that's fixable. Rewrite the headline first; everything else follows."]);
+
+// rewrites
+const rewrites=[
+["PAIN → OUTCOME",`Stop ${a.pain[0]?a.pain[0].replace(/ing$/,""):"struggling"}. ${a.outcome[0]?a.outcome[0].charAt(0).toUpperCase()+a.outcome[0].slice(1):"Get results"} in minutes, not meetings.`],
+["SPECIFIC PROOF",(a.hasNum?(t.match(/\d[\d,.%x]*/)[0]+" "):"10,000+ ")+(a.proof[0]||"teams")+" already ship faster. Here's the "+(a.hasNum?"number":"proof")+"."],
+["DIRECT BENEFIT",`${a.outcome[0]?"Double what you "+a.outcome[0]:"Get more done"} — without ${a.vague[0]||"the usual overhead"}. Free to try.`]
+];
+
+document.getElementById('grade').textContent=letter;
+document.getElementById('grade').style.color=color;
+document.getElementById('gradesub').textContent="Overall "+a.overall+"/100 — "+sub;
+
+const dims=[
+["Clarity — can a stranger get it in 5s?",a.clarity],
+["Specificity — numbers over adjectives",a.specificity],
+["Proof — why should anyone believe you",a.proofScore],
+["Hook — headline pull",a.hook],
+["CTA — does the button promise anything",a.cta],
+["Hygiene — buzzwords, caps, flab",a.hygiene]];
+document.getElementById('dims').innerHTML=dims.map(d=>{
+const c=d[1]>=70?"#3dd68c":d[1]>=45?"#f5a623":"#e5484d";
+return `<div class="dim"><div class="dimhead"><b>${d[0]}</b><span class="val">${d[1]}</span></div><div class="bar"><div style="width:${d[1]}%;background:${c}"></div></div></div>`}).join("");
+
+document.getElementById('flags').innerHTML=flags.map(f=>`<div class="flag ${f[1]}">${f[2]}</div>`).join("");
+document.getElementById('rewrites').innerHTML=rewrites.map(r=>`<div class="rw"><small>${r[0]}</small>${esc(r[1])}</div>`).join("");
+
+const shareText=`My landing page just got roasted ${letter} (${a.overall}/100) by ROAST — paste your copy, get graded honestly: `+location.href;
+document.getElementById('xshare').href="https://x.com/intent/tweet?text="+encodeURIComponent(shareText);
+window._roastText=`ROAST result: ${letter} (${a.overall}/100)\n\n`+flags.map(f=>f[2].replace(/<[^>]+>/g,"")).join("\n\n")+"\n\nGrade your page: "+location.href;
+document.getElementById('results').style.display='block';
+document.getElementById('results').scrollIntoView({behavior:"smooth"});
+}
+
+function copyRoast(){
+if(!window._roastText)return;
+navigator.clipboard.writeText(window._roastText).then(()=>{
+const b=document.getElementById('copybtn');b.textContent="Copied ✓";b.classList.add('copied');
+setTimeout(()=>{b.textContent="Copy my roast";b.classList.remove('copied')},2000)});
+}
+</script>
+</body>
+</html>
